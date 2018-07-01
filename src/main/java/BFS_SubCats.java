@@ -9,22 +9,36 @@ public class BFS_SubCats { // Breadth first search through subcategories tree
     private ArrayList<String> startingCats;
     private ArrayList<SubCatCrawler> subCats;
     private int maxPages;
+    private String path;
     private ExecutorService service;
 
     public ArrayList<MiniCrawler> crawlers;
 
-    public BFS_SubCats(int threadCount){
+    public BFS_SubCats(int threadCount, String path, String[] categories){
         subCats = new ArrayList<SubCatCrawler>();
         startingCats = new ArrayList<String >();
-        maxPages = 40;
+        for (int i=0;i<categories.length;i++) {
+            startingCats.add(new String(categories[i]));
+        }
+        maxPages = 400;
+        this.path = new String(path);
         service = Executors.newFixedThreadPool(threadCount);
     }
 
     public static void main(String[] args) {
         long runtime = System.currentTimeMillis();
+        String[] catsToCrawl = new String[3];
+        catsToCrawl[0] = "Игры";
+        catsToCrawl[1] = "Культура";
+        catsToCrawl[2] = "Наука";
         try {
-            BFS_SubCats mainRunner = new BFS_SubCats(5);
-            mainRunner.breadthFirstSearch("D:\\WikiCrawler_","Игры");
+            BFS_SubCats mainRunner = new BFS_SubCats(10,"D:\\Wikipedia_Crawler", catsToCrawl);
+            for (int i =0; i< mainRunner.startingCats.size();i++){
+            mainRunner.breadthFirstSearch(mainRunner.startingCats.get(i),i);
+            }
+            mainRunner.service.shutdown();
+            mainRunner.service.awaitTermination(5, TimeUnit.MINUTES);
+
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
@@ -38,11 +52,12 @@ public class BFS_SubCats { // Breadth first search through subcategories tree
     }
     // Сбор статей по одной категории:
     // модиификация обхода дерева в ширину (вместо поиска определенного узла пытаемя набрать 400 страниц)
-    public void breadthFirstSearch(String path, String startCat) throws IOException, InterruptedException {
+    public void breadthFirstSearch(String startCat, int number) throws IOException, InterruptedException {
             Integer stopLevel = null; // уровень, на котором набралось требуемое число страниц
             boolean goFurther = true; // добавляем ли дочерние узлы в очередь
             SubCatCrawler currentNode;
-            subCats.add(new SubCatCrawler(path,startCat));
+            subCats.clear();
+            subCats.add(new SubCatCrawler(path,startCat,number));
             ConcurrentLinkedQueue<SubCatCrawler> queue = new ConcurrentLinkedQueue<SubCatCrawler>();
             queue.add(subCats.get(0));
             while(! queue.isEmpty() ) {
@@ -68,8 +83,6 @@ public class BFS_SubCats { // Breadth first search through subcategories tree
                         }
                     }
                 }
-            service.shutdown();
-            service.awaitTermination(5, TimeUnit.MINUTES);
     }
 
     private boolean stopCondition(SubCatCrawler node){

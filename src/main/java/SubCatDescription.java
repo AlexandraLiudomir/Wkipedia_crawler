@@ -6,12 +6,12 @@ public class SubCatDescription {
     public String filePath;
     public int localNumber;
 
-    public SubCatDescription(){
+    public SubCatDescription(int number){
         name = new String();
         level = 0;
         addrURL = new String();
         filePath = new String();
-        localNumber = 0;
+        localNumber = number;
         pageid = new String();
     }
     public SubCatDescription(SubCatDescription parentDescription){

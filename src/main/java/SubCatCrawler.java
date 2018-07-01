@@ -23,8 +23,8 @@ public class SubCatCrawler {
     public static final String pageQuery = "https://ru.wikipedia.org/w/api.php?format=xml&action=query&prop=extracts&explaintext&exsectionformat=plain&pageids=";
     public static final String subcatQuery = "https://ru.wikipedia.org/w/api.php?action=query&format=xml&list=categorymembers&cmprop=title|type|ids&cmlimit=50&cmtitle=Category:";
 
-    public SubCatCrawler(String filePath, String name){
-        description = new SubCatDescription();
+    public SubCatCrawler(String filePath, String name, int number){
+        description = new SubCatDescription(number);
         description.name = name;
         description.filePath = filePath;
         parent = null;
