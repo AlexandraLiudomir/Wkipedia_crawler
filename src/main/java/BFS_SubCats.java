@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -7,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 public class BFS_SubCats { // Breadth first search through subcategories tree
     private ArrayList<String> startingCats;
-    private ArrayList<SubCatCrawler> subCats;
+    private LinkedList<SubCatCrawler> subCats;
     private int maxPages;
     private String path;
     private ExecutorService service;
@@ -15,7 +16,7 @@ public class BFS_SubCats { // Breadth first search through subcategories tree
     public ArrayList<MiniCrawler> crawlers;
 
     public BFS_SubCats(int threadCount, String path, String[] categories){
-        subCats = new ArrayList<SubCatCrawler>();
+        subCats = new LinkedList<SubCatCrawler>();
         startingCats = new ArrayList<String >();
         for (int i=0;i<categories.length;i++) {
             startingCats.add(new String(categories[i]));
