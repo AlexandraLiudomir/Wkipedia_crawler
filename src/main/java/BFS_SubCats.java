@@ -11,8 +11,8 @@ public class BFS_SubCats { // Breadth first search through subcategories tree
     private LinkedList<SubCatCrawler> subCats;
     private int maxPages;
     private String path;
-    private ExecutorService service;
-
+    //private ExecutorService service;
+    public MultiThreadLauncher threadLauncher;
     public ArrayList<MiniCrawler> crawlers;
 
     public BFS_SubCats(int threadCount, String path, String[] categories){
@@ -23,11 +23,12 @@ public class BFS_SubCats { // Breadth first search through subcategories tree
         }
         maxPages = 400;
         this.path = new String(path);
-        service = Executors.newFixedThreadPool(threadCount);
+        threadLauncher = new MultiThreadLauncher(5,1);
+        //service = Executors.newFixedThreadPool(threadCount);
     }
 
     public static void main(String[] args) {
-        long runtime = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
         String[] catsToCrawl = new String[3];
         catsToCrawl[0] = "Игры";
         catsToCrawl[1] = "Культура";
@@ -37,15 +38,16 @@ public class BFS_SubCats { // Breadth first search through subcategories tree
             for (int i =0; i< mainRunner.startingCats.size();i++){
             mainRunner.breadthFirstSearch(mainRunner.startingCats.get(i),i);
             }
-            mainRunner.service.shutdown();
-            mainRunner.service.awaitTermination(5, TimeUnit.MINUTES);
+//            mainRunner.service.shutdown();
+//            mainRunner.service.awaitTermination(5, TimeUnit.MINUTES);
+            mainRunner.threadLauncher.terminate();
 
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        System.out.println(System.currentTimeMillis()-runtime);
+        System.out.println(System.currentTimeMillis()-startTime);
     }
 
     public void runCrawling(){
@@ -64,7 +66,7 @@ public class BFS_SubCats { // Breadth first search through subcategories tree
             while(! queue.isEmpty() ) {
                 currentNode = queue.poll();
                 if (!totalStop(stopLevel,currentNode.getLevel())){
-                    currentNode.crawlOnce(service);
+                    currentNode.crawlOnce(threadLauncher);
                     if (stopLevel == null){
                         if(stopCondition(currentNode)){
                             goFurther = false;

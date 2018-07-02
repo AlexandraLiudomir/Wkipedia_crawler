@@ -49,14 +49,14 @@ public class SubCatCrawler {
         pagesCount = 0;
     }
 
-    public void crawlOnce(ExecutorService service) throws IOException {
+    public void crawlOnce(MultiThreadLauncher launcher) throws IOException {
         description.name = description.name.replace(":","_");
         description.filePath = description.filePath+"/"+description.name;
         File directory = new File(description.filePath);
         if(!directory.exists())
             directory.mkdirs();
         getChildren();
-        crawlPages(service);
+        crawlPages(launcher);
         }
 
     private void getChildren() throws IOException
@@ -85,15 +85,16 @@ public class SubCatCrawler {
             }
     }
 
-    private void crawlPages(ExecutorService service) throws IOException {
+    private void crawlPages(MultiThreadLauncher launcher) throws IOException {
        for (int i=0; i < pages.size();i++) {
-           pageCrawlers.add(new MiniCrawler(this, pageQuery + pages.get(i), i));
+           //pageCrawlers.add(new MiniCrawler(this, pageQuery + pages.get(i), i));
            incPagesCount();
+           launcher.enqueue(new MiniCrawler(this, pageQuery + pages.get(i), i));
        }
-        for (int i=0; i < pageCrawlers.size();i++){
+        //for (int i=0; i < pageCrawlers.size();i++){
             //pageCrawlers.get(i).loadToTxt();
-            service.submit(pageCrawlers.get(i));
-        }
+       //     service.submit(pageCrawlers.get(i));
+        //}
     }
     public void createChildren(){
         for (int i=0; i < subCats.size();i++){
