@@ -17,7 +17,7 @@ public class MultiThreadLauncher {
         go();
     }
 
-    public void go(){
+    private void go(){
         for (int i = 0; i < threadCount; i++) {
             service.scheduleAtFixedRate(dequeue, 0, delay, TimeUnit.MILLISECONDS);
         }

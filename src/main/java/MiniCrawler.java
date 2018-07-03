@@ -3,17 +3,16 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.events.XMLEvent;
 import java.io.*;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 public class MiniCrawler  {
     private ArticleDescription description;
     private SubCatCrawler parent;
 
-    public MiniCrawler(SubCatCrawler parent, String pageURL, int localNum) throws MalformedURLException {
+    public MiniCrawler(SubCatCrawler parent, String pageURL, int localNum){
         super();
         this.description = new ArticleDescription(parent.getDescription());
-        this.description.addrURL = new String(pageURL);
+        this.description.addrURL = pageURL;
         this.parent = parent;
         this.description.localNumber = localNum;
     }
@@ -36,12 +35,12 @@ public class MiniCrawler  {
             while (reader.hasNext()) {       // while not end of XML
                 int event = reader.next();   // read next event
                 if ((!gotpage)&&(event == XMLEvent.START_ELEMENT)) {
-                    if (reader.getName().toString() == "page") {
-                        description.pageid = reader.getAttributeValue(1).toString();
-                        description.name = new String(reader.getAttributeValue(3));
-                        description.addrURL = SubCatCrawler.pageURLprefix+new String(description.name.replace(" ","_"));
+                    if (reader.getName().toString().equals("page")) {
+                        description.pageid = reader.getAttributeValue(1);
+                        description.name = reader.getAttributeValue(3);
+                        description.addrURL = SubCatCrawler.pageURLprefix+description.name.replace(" ","_");
 
-                        out = new BufferedOutputStream(new FileOutputStream(description.filePath+"/"+description.filename.toString()+".txt"));
+                        out = new BufferedOutputStream(new FileOutputStream(description.filePath+"/"+description.filename+".txt"));
                         gotpage = true;
                     }
                 }

@@ -18,10 +18,10 @@ public class SubCatCrawler {
     private ArrayList<String> pages; // список адресов страниц
     private ArrayList<String> subCats;// список адресов подкатегорий
     private  ArrayList<SubCatCrawler> subCatCrawlers;//краулеры подкатегорий
-    public SubCatCrawler parent;
+    private SubCatCrawler parent;
     private int pagesCount;//актуально только у самого первого предка (категории), см getPagesCount, incPagesCount
-    public static final String pageQuery = "https://ru.wikipedia.org/w/api.php?format=xml&action=query&prop=extracts&explaintext&exsectionformat=plain&pageids=";
-    public static final String subcatQuery = "https://ru.wikipedia.org/w/api.php?action=query&format=xml&list=categorymembers&cmprop=title|type|ids&cmlimit=50&cmtitle=Category:";
+    private static final String pageQuery = "https://ru.wikipedia.org/w/api.php?format=xml&action=query&prop=extracts&explaintext&exsectionformat=plain&pageids=";
+    private static final String subcatQuery = "https://ru.wikipedia.org/w/api.php?action=query&format=xml&list=categorymembers&cmprop=title|type|ids&cmlimit=50&cmtitle=Category:";
     public static final String pageURLprefix = "https://ru.wikipedia.org/wiki/";
 
     public SubCatCrawler(String filePath, String name, int number){
@@ -30,17 +30,17 @@ public class SubCatCrawler {
         description.filePath = filePath;
         parent = null;
         description.addrURL = subcatQuery+description.name;
-        pages = new ArrayList<String>();
-        subCats = new ArrayList<String>();
-        subCatCrawlers = new ArrayList<SubCatCrawler>(1);
+        pages = new ArrayList<>();
+        subCats = new ArrayList<>();
+        subCatCrawlers = new ArrayList<>(1);
         pagesCount = 0;
     }
 
     public SubCatCrawler(SubCatCrawler parent, String name, int num) {
         this.parent = parent;
-        pages = new ArrayList<String>();
-        subCats = new ArrayList<String>();
-        subCatCrawlers = new ArrayList<SubCatCrawler>(1);
+        pages = new ArrayList<>();
+        subCats = new ArrayList<>();
+        subCatCrawlers = new ArrayList<>(1);
         description = new SubCatDescription(parent.description);
         description.name = name;
         description.localNumber = num;
@@ -61,19 +61,18 @@ public class SubCatCrawler {
     private void getChildren() throws IOException
     {
         InputStream pageStream = new URL(this.description.addrURL).openStream();
-        BufferedOutputStream out = null;
         XMLInputFactory FACTORY = XMLInputFactory.newInstance();
         try {
             XMLStreamReader reader = FACTORY.createXMLStreamReader(pageStream);
             while (reader.hasNext()) {       // while not end of XML
                 int event = reader.next();
                 if (event == XMLEvent.START_ELEMENT) {
-                    if (reader.getName().toString() == "cm") {
-                        if (reader.getAttributeValue(3).toString().equals("page")) {
-                            pages.add(reader.getAttributeValue(0).toString());
+                    if (reader.getName().toString().equals("cm")) {
+                        if (reader.getAttributeValue(3).equals("page")) {
+                            pages.add(reader.getAttributeValue(0));
                         }
-                        else if (reader.getAttributeValue(3).toString().equals("subcat")) {
-                            subCats.add(reader.getAttributeValue(2).toString().substring(10).replace(" ","_"));
+                        else if (reader.getAttributeValue(3).equals("subcat")) {
+                            subCats.add(reader.getAttributeValue(2).substring(10).replace(" ","_"));
                         }
                     }
                 }
@@ -86,7 +85,7 @@ public class SubCatCrawler {
             }
     }
 
-    private void crawlPages(MultiThreadLauncher launcher) throws IOException {
+    private void crawlPages(MultiThreadLauncher launcher) {
        for (int i=0; i < pages.size();i++) {
            incPagesCount();
            launcher.enqueue(new MiniCrawler(this, pageQuery + pages.get(i), i));

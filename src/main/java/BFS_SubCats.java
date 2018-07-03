@@ -1,39 +1,29 @@
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 public class BFS_SubCats { // Breadth first search through subcategories tree
     private ArrayList<String> startingCats;
     private LinkedList<SubCatCrawler> subCats;
     private int maxPages;
     private String path;
-    public MultiThreadLauncher threadLauncher;
+    private MultiThreadLauncher threadLauncher;
 
     public BFS_SubCats(int threadCount, int delay, int maxPages, String path, String[] categories) {
         subCats = new LinkedList<>();
         startingCats = new ArrayList<>();
-
-        for (int i=0;i<categories.length;i++) {
-            startingCats.add(new String(categories[i]));
-        }
+        Collections.addAll(startingCats, categories);
         this.maxPages = maxPages;
-        this.path = new String(path);
-
-
-
+        this.path = path;
         threadLauncher = new MultiThreadLauncher(threadCount,delay);
-
     }
 
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis();
-        String[] catsToCrawl = {"Игры" /*,Искусство","Автомобили"*/};
+        String[] catsToCrawl = {"Биология" /*,Искусство","Автомобили"*/};
         int maxpages = 400;
         int threadCount = 10;
         int delay = 1;
@@ -66,36 +56,34 @@ public class BFS_SubCats { // Breadth first search through subcategories tree
     // Сбор статей по одной категории:
     // модиификация обхода дерева в ширину (вместо поиска определенного узла пытаемя набрать 400 страниц)
     public void breadthFirstSearch(String startCat, int number) throws IOException, InterruptedException {
-            Integer stopLevel = null; // уровень, на котором набралось требуемое число страниц
-            boolean goFurther = true; // добавляем ли дочерние узлы в очередь
-            SubCatCrawler currentNode;
-            subCats.clear();
-            subCats.add(new SubCatCrawler(path,startCat,number));
-            ConcurrentLinkedQueue<SubCatCrawler> queue = new ConcurrentLinkedQueue<SubCatCrawler>();
-            queue.add(subCats.get(0));
-            while(! queue.isEmpty() ) {
-                currentNode = queue.poll();
-                if (!totalStop(stopLevel,currentNode.getLevel())){
-                    currentNode.crawl(threadLauncher);
-                    if (stopLevel == null){
-                        if(stopCondition(currentNode)){
-                            goFurther = false;
-                            stopLevel = currentNode.getLevel();
-                        }
+        Integer stopLevel = null; // уровень, на котором набралось требуемое число страниц
+        boolean goFurther = true; // добавляем ли дочерние узлы в очередь
+        SubCatCrawler currentNode;
+        subCats.clear();
+        subCats.add(new SubCatCrawler(path, startCat, number));
+        ConcurrentLinkedQueue<SubCatCrawler> queue = new ConcurrentLinkedQueue<>();
+        queue.add(subCats.get(0));
+        while (!queue.isEmpty()) {
+            currentNode = queue.poll();
+            if (!totalStop(stopLevel, currentNode.getLevel())) {
+                currentNode.crawl(threadLauncher);
+                if (stopLevel == null) {
+                    if (stopCondition(currentNode)) {
+                        goFurther = false;
+                        stopLevel = currentNode.getLevel();
                     }
                 }
-                else
-                {
-                    break;
-                }
+            } else {
+                break;
+            }
 
-                if (goFurther) {
-                    for (int i = 0; i < currentNode.childrenCount();i++ ) {    // все преемники текущего узла, ...
-                        subCats.add(currentNode.createChild(i));
-                        queue.add(currentNode.createChild(i));
-                        }
-                    }
+            if (goFurther) {
+                for (int i = 0; i < currentNode.childrenCount(); i++) {    // все преемники текущего узла, ...
+                    subCats.add(currentNode.createChild(i));
+                    queue.add(currentNode.createChild(i));
                 }
+            }
+        }
     }
 
     private boolean stopCondition(SubCatCrawler node){

@@ -8,21 +8,21 @@ public class SubCatDescription {
     public Integer category;
 
     public SubCatDescription(int number){
-        name = new String();
+        name = null;
         level = 0;
-        addrURL = new String();
-        filePath = new String();
+        addrURL = null;
+        filePath = null;
         localNumber = number;
-        pageid = new String();
+        pageid = null;
         category = localNumber;
     }
     public SubCatDescription(SubCatDescription parentDescription){
-        name = new String();
+        name = null;
         level = parentDescription.level + 1;
-        addrURL = new String();
-        filePath = new String(parentDescription.filePath);
+        addrURL = null;
+        filePath = parentDescription.filePath;
         localNumber = 0;
-        pageid = new String();
+        pageid = null;
         category = parentDescription.category;
     }
 

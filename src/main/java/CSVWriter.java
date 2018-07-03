@@ -1,7 +1,6 @@
 import com.sun.istack.internal.NotNull;
 
 import java.io.BufferedOutputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -11,13 +10,11 @@ public class CSVWriter {
     public static CSVWriter getInstance() {
         return ourInstance;
     }
-    private String path;
     private BufferedOutputStream out;
 
     private CSVWriter() { }
 
     public void setPath(@NotNull String path) throws IOException {
-        this.path = path;
         out = new BufferedOutputStream(new FileOutputStream(path));
         out.write(new StringBuilder().append("File id").append(" , ")
                 .append("Название статьи").append(" , ")
