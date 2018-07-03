@@ -6,43 +6,31 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-public class MiniCrawler  implements Runnable {
-    private URL address;
-    private int num;
+public class MiniCrawler  {
     private ArticleDescription description;
     private SubCatCrawler parent;
 
     public MiniCrawler(SubCatCrawler parent, String pageURL, int localNum) throws MalformedURLException {
         super();
         this.description = new ArticleDescription(parent.getDescription());
-        this.address = new URL(pageURL);
+        this.description.addrURL = new String(pageURL);
         this.parent = parent;
-        this.num = localNum;
+        this.description.localNumber = localNum;
     }
 
-    public void update(SubCatCrawler parent, String pageURL, int localNum) throws MalformedURLException {
-        this.description = new ArticleDescription(parent.getDescription());
-        this.address = new URL(pageURL);
-        this.parent = parent;
-        this.num = localNum;
+    public void load() throws IOException {
+        loadToTxt();
+        loadToCSV();
     }
 
-    @Override
-    public void run() {
-        //System.out.println(Thread.currentThread().getId());
-        try {
-            loadToTxt();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void loadToTxt() throws IOException {
+    private void loadToTxt() throws IOException {
+        URL address = new URL(this.description.addrURL);
         InputStream pageStream = address.openStream();
         BufferedOutputStream out = null;
         boolean gotpage = false;
         XMLInputFactory FACTORY = XMLInputFactory.newInstance();
-        this.description.addrURL = address.toString();
+        String text;
+        description.filename = parent.getID()+"_"+description.localNumber;
         try {
             XMLStreamReader reader = FACTORY.createXMLStreamReader(pageStream);
             while (reader.hasNext()) {       // while not end of XML
@@ -51,12 +39,16 @@ public class MiniCrawler  implements Runnable {
                     if (reader.getName().toString() == "page") {
                         description.pageid = reader.getAttributeValue(1).toString();
                         description.name = new String(reader.getAttributeValue(3));
-                        out = new BufferedOutputStream(new FileOutputStream(description.filePath+"/"+parent.getID()+'_'+new Integer(num).toString()+".txt"));
+                        description.addrURL = SubCatCrawler.pageURLprefix+new String(description.name.replace(" ","_"));
+
+                        out = new BufferedOutputStream(new FileOutputStream(description.filePath+"/"+description.filename.toString()+".txt"));
                         gotpage = true;
                     }
                 }
                 else if ((gotpage)&&(reader.hasText())) {
-                    out.write(reader.getText().getBytes());
+                    text = reader.getText();
+                    out.write(text.getBytes());
+                    description.sizeSymbol += text.length();
                 }
             }
             out.flush();
@@ -65,8 +57,8 @@ public class MiniCrawler  implements Runnable {
         }
     }
 
-    public void loadToCSV(String pathCSV){
-
+    private void loadToCSV() throws IOException, NullPointerException {
+        CSVWriter.getInstance().write(description);
     }
 
 }

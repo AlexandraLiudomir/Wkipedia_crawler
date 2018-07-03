@@ -7,14 +7,13 @@ import java.util.concurrent.TimeUnit;
 public class MultiThreadLauncher {
     private int delay;
     private int threadCount;
-    private boolean terminated;
     private ScheduledExecutorService service;
     private ConcurrentLinkedQueue<MiniCrawler> pagesToGo;
     public MultiThreadLauncher(int threadCount, int delay){
         this.threadCount = threadCount;
         this.delay = delay;
         service = Executors.newScheduledThreadPool(threadCount);
-        pagesToGo = new ConcurrentLinkedQueue<MiniCrawler>();
+        pagesToGo = new ConcurrentLinkedQueue<>();
         go();
     }
 
@@ -27,7 +26,7 @@ public class MultiThreadLauncher {
     final Runnable dequeue = ()-> {
         if (!pagesToGo.isEmpty()){
             try {
-                pagesToGo.poll().loadToTxt();
+                pagesToGo.poll().load();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -39,7 +38,6 @@ public class MultiThreadLauncher {
     }
 
     public void terminate(){
-        terminated = true;
         while (!pagesToGo.isEmpty()){ }
         service.shutdown();
         try {

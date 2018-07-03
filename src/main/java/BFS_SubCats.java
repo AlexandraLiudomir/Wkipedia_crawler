@@ -1,3 +1,5 @@
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -11,46 +13,54 @@ public class BFS_SubCats { // Breadth first search through subcategories tree
     private LinkedList<SubCatCrawler> subCats;
     private int maxPages;
     private String path;
-    //private ExecutorService service;
     public MultiThreadLauncher threadLauncher;
-    public ArrayList<MiniCrawler> crawlers;
 
-    public BFS_SubCats(int threadCount, String path, String[] categories){
-        subCats = new LinkedList<SubCatCrawler>();
-        startingCats = new ArrayList<String >();
+    public BFS_SubCats(int threadCount, int delay, int maxPages, String path, String[] categories) {
+        subCats = new LinkedList<>();
+        startingCats = new ArrayList<>();
+
         for (int i=0;i<categories.length;i++) {
             startingCats.add(new String(categories[i]));
         }
-        maxPages = 400;
+        this.maxPages = maxPages;
         this.path = new String(path);
-        threadLauncher = new MultiThreadLauncher(5,1);
-        //service = Executors.newFixedThreadPool(threadCount);
+
+
+
+        threadLauncher = new MultiThreadLauncher(threadCount,delay);
+
     }
 
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis();
-        String[] catsToCrawl = new String[3];
-        catsToCrawl[0] = "Игры";
-        catsToCrawl[1] = "Культура";
-        catsToCrawl[2] = "Наука";
+        String[] catsToCrawl = {"Игры" /*,Искусство","Автомобили"*/};
+        int maxpages = 400;
+        int threadCount = 10;
+        int delay = 1;
+        String path = "D:\\Wikipedia_Crawler";
+        String csvName = "summary.csv";
+        new BFS_SubCats(threadCount,delay, maxpages, path, catsToCrawl).runCrawling(csvName);
+        System.out.println(System.currentTimeMillis()-startTime);
+    }
+
+    public void runCrawling(String csvName){
         try {
-            BFS_SubCats mainRunner = new BFS_SubCats(10,"D:\\Wikipedia_Crawler", catsToCrawl);
-            for (int i =0; i< mainRunner.startingCats.size();i++){
-            mainRunner.breadthFirstSearch(mainRunner.startingCats.get(i),i);
+            File directory = new File(path);
+            if(!directory.exists())
+                directory.mkdirs();
+            CSVWriter.getInstance().setPath(path+"/"+csvName);
+
+            for (int i =0; i< startingCats.size();i++){
+                breadthFirstSearch(startingCats.get(i),i);
             }
-//            mainRunner.service.shutdown();
-//            mainRunner.service.awaitTermination(5, TimeUnit.MINUTES);
-            mainRunner.threadLauncher.terminate();
+            threadLauncher.terminate();
+            CSVWriter.getInstance().terminate();
 
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        System.out.println(System.currentTimeMillis()-startTime);
-    }
-
-    public void runCrawling(){
 
     }
     // Сбор статей по одной категории:
@@ -66,7 +76,7 @@ public class BFS_SubCats { // Breadth first search through subcategories tree
             while(! queue.isEmpty() ) {
                 currentNode = queue.poll();
                 if (!totalStop(stopLevel,currentNode.getLevel())){
-                    currentNode.crawlOnce(threadLauncher);
+                    currentNode.crawl(threadLauncher);
                     if (stopLevel == null){
                         if(stopCondition(currentNode)){
                             goFurther = false;

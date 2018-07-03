@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -16,12 +17,12 @@ public class SubCatCrawler {
     private SubCatDescription description;
     private ArrayList<String> pages; // список адресов страниц
     private ArrayList<String> subCats;// список адресов подкатегорий
-    private ArrayList<MiniCrawler> pageCrawlers;//краулеры страниц
     private  ArrayList<SubCatCrawler> subCatCrawlers;//краулеры подкатегорий
     public SubCatCrawler parent;
     private int pagesCount;//актуально только у самого первого предка (категории), см getPagesCount, incPagesCount
     public static final String pageQuery = "https://ru.wikipedia.org/w/api.php?format=xml&action=query&prop=extracts&explaintext&exsectionformat=plain&pageids=";
     public static final String subcatQuery = "https://ru.wikipedia.org/w/api.php?action=query&format=xml&list=categorymembers&cmprop=title|type|ids&cmlimit=50&cmtitle=Category:";
+    public static final String pageURLprefix = "https://ru.wikipedia.org/wiki/";
 
     public SubCatCrawler(String filePath, String name, int number){
         description = new SubCatDescription(number);
@@ -31,7 +32,6 @@ public class SubCatCrawler {
         description.addrURL = subcatQuery+description.name;
         pages = new ArrayList<String>();
         subCats = new ArrayList<String>();
-        pageCrawlers = new ArrayList<MiniCrawler>(1);
         subCatCrawlers = new ArrayList<SubCatCrawler>(1);
         pagesCount = 0;
     }
@@ -40,7 +40,6 @@ public class SubCatCrawler {
         this.parent = parent;
         pages = new ArrayList<String>();
         subCats = new ArrayList<String>();
-        pageCrawlers = new ArrayList<MiniCrawler>(1);
         subCatCrawlers = new ArrayList<SubCatCrawler>(1);
         description = new SubCatDescription(parent.description);
         description.name = name;
@@ -49,7 +48,7 @@ public class SubCatCrawler {
         pagesCount = 0;
     }
 
-    public void crawlOnce(MultiThreadLauncher launcher) throws IOException {
+    public void crawl(MultiThreadLauncher launcher) throws IOException {
         description.name = description.name.replace(":","_");
         description.filePath = description.filePath+"/"+description.name;
         File directory = new File(description.filePath);
@@ -79,6 +78,8 @@ public class SubCatCrawler {
                     }
                 }
             }
+            //Collections.sort(pages);
+            Collections.sort(subCats);
         }
             catch (XMLStreamException e) {
             e.printStackTrace();
@@ -87,19 +88,9 @@ public class SubCatCrawler {
 
     private void crawlPages(MultiThreadLauncher launcher) throws IOException {
        for (int i=0; i < pages.size();i++) {
-           //pageCrawlers.add(new MiniCrawler(this, pageQuery + pages.get(i), i));
            incPagesCount();
            launcher.enqueue(new MiniCrawler(this, pageQuery + pages.get(i), i));
        }
-        //for (int i=0; i < pageCrawlers.size();i++){
-            //pageCrawlers.get(i).loadToTxt();
-       //     service.submit(pageCrawlers.get(i));
-        //}
-    }
-    public void createChildren(){
-        for (int i=0; i < subCats.size();i++){
-            subCatCrawlers.add(new SubCatCrawler(this, subCats.get(i), i));
-        }
     }
 
     public SubCatCrawler createChild(int num){
