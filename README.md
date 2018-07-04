@@ -6,6 +6,7 @@ So I 've made xml-file "settings" and put it into /src. In this file one can adj
 - categories names
 - path to resulting files
 -resulting CSV-file name.
+
 Sorry for not handling any exceptions. And for maybe uploading some extra files. 
 Time from application start in milliseconds shown in console.
 
