@@ -8,13 +8,15 @@ import java.net.URL;
 public class MiniCrawler  {
     private ArticleDescription description;
     private SubCatCrawler parent;
+    private static final String pageURLprefix = "https://ru.wikipedia.org/wiki/";
 
-    public MiniCrawler(SubCatCrawler parent, String pageURL, int localNum){
+    public MiniCrawler(SubCatCrawler parent, String pageURL, String name, int localNum){
         super();
         this.description = new ArticleDescription(parent.getDescription());
         this.description.addrURL = pageURL;
         this.parent = parent;
         this.description.localNumber = localNum;
+        this.description.name = name;
     }
 
     public void load() throws IOException {
@@ -25,26 +27,16 @@ public class MiniCrawler  {
     private void loadToTxt() throws IOException {
         URL address = new URL(this.description.addrURL);
         InputStream pageStream = address.openStream();
-        BufferedOutputStream out = null;
-        boolean gotpage = false;
         XMLInputFactory FACTORY = XMLInputFactory.newInstance();
         String text;
-        description.filename = parent.getID()+"_"+description.localNumber;
+        description.filename = parent.getID()+"_"+String.format("%03d",description.localNumber);
+        description.addrURL = pageURLprefix+description.name.replace(" ","_");
+        BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(description.filePath+"/"+description.filename+".txt"));
         try {
             XMLStreamReader reader = FACTORY.createXMLStreamReader(pageStream);
             while (reader.hasNext()) {       // while not end of XML
                 int event = reader.next();   // read next event
-                if ((!gotpage)&&(event == XMLEvent.START_ELEMENT)) {
-                    if (reader.getName().toString().equals("page")) {
-                        description.pageid = reader.getAttributeValue(1);
-                        description.name = reader.getAttributeValue(3);
-                        description.addrURL = SubCatCrawler.pageURLprefix+description.name.replace(" ","_");
-
-                        out = new BufferedOutputStream(new FileOutputStream(description.filePath+"/"+description.filename+".txt"));
-                        gotpage = true;
-                    }
-                }
-                else if ((gotpage)&&(reader.hasText())) {
+                if (reader.hasText()) {
                     text = reader.getText();
                     out.write(text.getBytes());
                     description.sizeSymbol += text.length();

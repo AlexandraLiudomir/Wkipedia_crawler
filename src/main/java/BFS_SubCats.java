@@ -1,5 +1,8 @@
-import java.io.File;
-import java.io.IOException;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.events.XMLEvent;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -7,29 +10,57 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class BFS_SubCats { // Breadth first search through subcategories tree
     private ArrayList<String> startingCats;
-    private LinkedList<SubCatCrawler> subCats;
+    private ArrayList<SubCatCrawler> subCats;
     private int maxPages;
     private String path;
     private MultiThreadLauncher threadLauncher;
 
-    public BFS_SubCats(int threadCount, int delay, int maxPages, String path, String[] categories) {
-        subCats = new LinkedList<>();
-        startingCats = new ArrayList<>();
-        Collections.addAll(startingCats, categories);
+    public BFS_SubCats(int threadCount, int period, int maxPages, String path, ArrayList<String> categories) {
+        subCats = new ArrayList<>();
+        startingCats = categories;
+        //Collections.addAll(startingCats, categories);
         this.maxPages = maxPages;
         this.path = path;
-        threadLauncher = new MultiThreadLauncher(threadCount,delay);
+        threadLauncher = new MultiThreadLauncher(threadCount,period);
     }
 
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis();
-        String[] catsToCrawl = {"Биология" /*,Искусство","Автомобили"*/};
+        ArrayList<String> catsToCrawl = new ArrayList<>();// = {"Биология" /*,Искусство","Автомобили"*/};
         int maxpages = 400;
-        int threadCount = 10;
-        int delay = 1;
-        String path = "D:\\Wikipedia_Crawler";
-        String csvName = "summary.csv";
-        new BFS_SubCats(threadCount,delay, maxpages, path, catsToCrawl).runCrawling(csvName);
+        int threadCount = 1;
+        int period = 1;
+        String path = "";
+        String csvName = "";
+
+        try {
+            InputStream settingsStream = new FileInputStream("src/settings.xml");
+            XMLInputFactory FACTORY = XMLInputFactory.newInstance();
+            XMLStreamReader reader = FACTORY.createXMLStreamReader(settingsStream);
+            while (reader.hasNext()) {       // while not end of XML
+                int event = reader.next();   // read next event
+                if (event == XMLEvent.START_ELEMENT) {
+                    switch (reader.getName().toString()){
+                        case "threads": {
+                            threadCount = Integer.parseInt(reader.getAttributeValue(reader.getNamespaceURI(),"count"));
+                            period = Integer.parseInt(reader.getAttributeValue(reader.getNamespaceURI(),"period"));
+                        }break;
+                        case "Path":{
+                            path = reader.getAttributeValue(reader.getNamespaceURI(),"folderPath");
+                            csvName = reader.getAttributeValue(reader.getNamespaceURI(),"csvName");
+                        }break;
+                        case "cat":{
+                            catsToCrawl.add(reader.getAttributeValue(reader.getNamespaceURI(),"name"));
+                        }break;
+                    }
+                }
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (XMLStreamException e) {
+            e.printStackTrace();
+        }
+        new BFS_SubCats(threadCount,period, maxpages, path, catsToCrawl).runCrawling(csvName);
         System.out.println(System.currentTimeMillis()-startTime);
     }
 

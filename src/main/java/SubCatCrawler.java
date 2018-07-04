@@ -2,27 +2,24 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.events.XMLEvent;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class SubCatCrawler {
     private SubCatDescription description;
-    private ArrayList<String> pages; // список адресов страниц
+    private TreeMap<String,String> pages; // key is pagename, value is pageID (because it is sorted by key)
     private ArrayList<String> subCats;// список адресов подкатегорий
     private  ArrayList<SubCatCrawler> subCatCrawlers;//краулеры подкатегорий
     private SubCatCrawler parent;
     private int pagesCount;//актуально только у самого первого предка (категории), см getPagesCount, incPagesCount
     private static final String pageQuery = "https://ru.wikipedia.org/w/api.php?format=xml&action=query&prop=extracts&explaintext&exsectionformat=plain&pageids=";
     private static final String subcatQuery = "https://ru.wikipedia.org/w/api.php?action=query&format=xml&list=categorymembers&cmprop=title|type|ids&cmlimit=50&cmtitle=Category:";
-    public static final String pageURLprefix = "https://ru.wikipedia.org/wiki/";
 
     public SubCatCrawler(String filePath, String name, int number){
         description = new SubCatDescription(number);
@@ -30,7 +27,7 @@ public class SubCatCrawler {
         description.filePath = filePath;
         parent = null;
         description.addrURL = subcatQuery+description.name;
-        pages = new ArrayList<>();
+        pages = new TreeMap<>();
         subCats = new ArrayList<>();
         subCatCrawlers = new ArrayList<>(1);
         pagesCount = 0;
@@ -38,7 +35,7 @@ public class SubCatCrawler {
 
     public SubCatCrawler(SubCatCrawler parent, String name, int num) {
         this.parent = parent;
-        pages = new ArrayList<>();
+        pages = new TreeMap<>();
         subCats = new ArrayList<>();
         subCatCrawlers = new ArrayList<>(1);
         description = new SubCatDescription(parent.description);
@@ -49,7 +46,7 @@ public class SubCatCrawler {
     }
 
     public void crawl(MultiThreadLauncher launcher) throws IOException {
-        description.name = description.name.replace(":","_");
+        description.name = getID()+"_"+description.name.replace(":","_");
         description.filePath = description.filePath+"/"+description.name;
         File directory = new File(description.filePath);
         if(!directory.exists())
@@ -69,7 +66,7 @@ public class SubCatCrawler {
                 if (event == XMLEvent.START_ELEMENT) {
                     if (reader.getName().toString().equals("cm")) {
                         if (reader.getAttributeValue(3).equals("page")) {
-                            pages.add(reader.getAttributeValue(0));
+                            pages.put(reader.getAttributeValue(2), reader.getAttributeValue(0));
                         }
                         else if (reader.getAttributeValue(3).equals("subcat")) {
                             subCats.add(reader.getAttributeValue(2).substring(10).replace(" ","_"));
@@ -86,9 +83,11 @@ public class SubCatCrawler {
     }
 
     private void crawlPages(MultiThreadLauncher launcher) {
-       for (int i=0; i < pages.size();i++) {
+        int i = 0;
+        for(Map.Entry entry: pages.entrySet()) {
            incPagesCount();
-           launcher.enqueue(new MiniCrawler(this, pageQuery + pages.get(i), i));
+           launcher.enqueue(new MiniCrawler(this, pageQuery + entry.getValue().toString(), entry.getKey().toString(), i));
+           i++;
        }
     }
 
@@ -127,10 +126,10 @@ public class SubCatCrawler {
     public String getID(){
         Integer id = this.description.localNumber;
         if (parent != null) {
-            return parent.getID() + "_" + id.toString();
+            return parent.getID() + "_" + String.format("%03d",id);
         }
         else{
-            return id.toString();
+            return String.format("%02d", id);//( "%02d", id.toString());
         }
     }
 
