@@ -26,7 +26,7 @@ public class SubCatCrawler {
         description.name = name;
         description.filePath = filePath;
         parent = null;
-        description.addrURL = subcatQuery+description.name;
+        description.addrURL = subcatQuery+description.name.replace(" ","_");
         pages = new TreeMap<>();
         subCats = new ArrayList<>();
         subCatCrawlers = new ArrayList<>(1);
