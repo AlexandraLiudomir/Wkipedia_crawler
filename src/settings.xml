@@ -1,0 +1,10 @@
+<settings date="04.07.2018" author="Alexandra">
+	<!--  -->
+		<threads count="10" period="1"/>
+		<Path folderPath="E:\\WikiCrawler" csvName="summary.csv"/>
+		<Categories>
+			<cat name="Наука"/>
+			<cat name="Литература"/>
+			<cat name="Автомобили"/>
+		</Categories>
+</settings>
