@@ -7,13 +7,13 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class BFS_SubCats { // Breadth first search through subcategories tree
     private ArrayList<String> startingCats;
-    private LinkedList<SubCatCrawler> subCats;
+    private ArrayList<SubCatCrawler> subCats;
     private int maxPages;
     private String path;
     private MultiThreadLauncher threadLauncher;
 
     public BFS_SubCats(int threadCount, int delay, int maxPages, String path, String[] categories) {
-        subCats = new LinkedList<>();
+        subCats = new ArrayList<>();
         startingCats = new ArrayList<>();
         Collections.addAll(startingCats, categories);
         this.maxPages = maxPages;
@@ -27,7 +27,7 @@ public class BFS_SubCats { // Breadth first search through subcategories tree
         int maxpages = 400;
         int threadCount = 10;
         int delay = 1;
-        String path = "D:\\Wikipedia_Crawler";
+        String path = new String("E:\\AlfaShit");
         String csvName = "summary.csv";
         new BFS_SubCats(threadCount,delay, maxpages, path, catsToCrawl).runCrawling(csvName);
         System.out.println(System.currentTimeMillis()-startTime);

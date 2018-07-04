@@ -1,6 +1,5 @@
 public class SubCatDescription {
     public String name;
-    public String pageid;
     public Integer level;
     public String addrURL;
     public String filePath;
@@ -13,7 +12,6 @@ public class SubCatDescription {
         addrURL = null;
         filePath = null;
         localNumber = number;
-        pageid = null;
         category = localNumber;
     }
     public SubCatDescription(SubCatDescription parentDescription){
@@ -22,7 +20,6 @@ public class SubCatDescription {
         addrURL = null;
         filePath = parentDescription.filePath;
         localNumber = 0;
-        pageid = null;
         category = parentDescription.category;
     }
 
