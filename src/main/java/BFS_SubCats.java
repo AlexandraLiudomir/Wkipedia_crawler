@@ -4,11 +4,9 @@ import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.events.XMLEvent;
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class BFS_SubCats { // Breadth first search through subcategories tree
+public class BFS_SubCats { // Breadth first search through subcategories tree - main class of the application
     private ArrayList<String> startingCats;
     private ArrayList<SubCatCrawler> subCats;
     private int maxPages;
@@ -18,7 +16,6 @@ public class BFS_SubCats { // Breadth first search through subcategories tree
     public BFS_SubCats(int threadCount, int period, int maxPages, String path, ArrayList<String> categories) {
         subCats = new ArrayList<>();
         startingCats = categories;
-        //Collections.addAll(startingCats, categories);
         this.maxPages = maxPages;
         this.path = path;
         threadLauncher = new MultiThreadLauncher(threadCount,period);
@@ -26,7 +23,7 @@ public class BFS_SubCats { // Breadth first search through subcategories tree
 
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis();
-        ArrayList<String> catsToCrawl = new ArrayList<>();// = {"Биология" /*,Искусство","Автомобили"*/};
+        ArrayList<String> catsToCrawl = new ArrayList<>();
         int maxpages = 400;
         int threadCount = 1;
         int period = 1;
@@ -64,7 +61,7 @@ public class BFS_SubCats { // Breadth first search through subcategories tree
         System.out.println(System.currentTimeMillis()-startTime);
     }
 
-    public void runCrawling(String csvName){
+    public void runCrawling(String csvName){ //main procedure
         try {
             File directory = new File(path);
             if(!directory.exists())
@@ -79,16 +76,13 @@ public class BFS_SubCats { // Breadth first search through subcategories tree
 
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
-
     }
-    // Сбор статей по одной категории:
-    // модиификация обхода дерева в ширину (вместо поиска определенного узла пытаемя набрать 400 страниц)
-    public void breadthFirstSearch(String startCat, int number) throws IOException, InterruptedException {
-        Integer stopLevel = null; // уровень, на котором набралось требуемое число страниц
-        boolean goFurther = true; // добавляем ли дочерние узлы в очередь
+    // Collecting pages in one category:
+    //which is an adaptation of breadth first search (instead of searching target node we are trying to collect 400 pages)
+    public void breadthFirstSearch(String startCat, int number) throws IOException {
+        Integer stopLevel = null; // level on which we have collected pages count we wanted
+        boolean goFurther = true; // shoul we keep adding subcats to queue
         SubCatCrawler currentNode;
         subCats.clear();
         subCats.add(new SubCatCrawler(path, startCat, number));
@@ -109,7 +103,7 @@ public class BFS_SubCats { // Breadth first search through subcategories tree
             }
 
             if (goFurther) {
-                for (int i = 0; i < currentNode.childrenCount(); i++) {    // все преемники текущего узла, ...
+                for (int i = 0; i < currentNode.childrenCount(); i++) {
                     subCats.add(currentNode.createChild(i));
                     queue.add(currentNode.createChild(i));
                 }
@@ -122,12 +116,11 @@ public class BFS_SubCats { // Breadth first search through subcategories tree
     }
 
     private boolean totalStop(Integer stopLevel,  int curLevel){
-       if((stopLevel==null)||(curLevel <= stopLevel)){ // если проверили не все страницы на уровне остановки,
-           return false; // проверяем дальше
+       if((stopLevel==null)||(curLevel <= stopLevel)){ // if we have not meet the goal pages number yet or have not finished the level where we met the goal
+           return false; // check further
        }
        else {
-           return true;//полная остановка, если проверили все узлы на уровне,
-           // на котором получили нужное число страниц и перешли к следующему
+           return true;//full stop if we finished the level where we met the goal and went to deeper level
        }
     }
 }

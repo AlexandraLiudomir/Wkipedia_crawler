@@ -29,6 +29,7 @@ public class MiniCrawler  {
         InputStream pageStream = address.openStream();
         XMLInputFactory FACTORY = XMLInputFactory.newInstance();
         String text;
+        boolean gowrite = false;
         description.filename = parent.getID()+"_"+String.format("%03d",description.localNumber);
         description.addrURL = pageURLprefix+description.name.replace(" ","_");
         BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(description.filePath+"/"+description.filename+".txt"));
@@ -36,7 +37,10 @@ public class MiniCrawler  {
             XMLStreamReader reader = FACTORY.createXMLStreamReader(pageStream);
             while (reader.hasNext()) {       // while not end of XML
                 int event = reader.next();   // read next event
-                if (reader.hasText()) {
+                if ((event == XMLEvent.START_ELEMENT)&&(reader.getName().toString().equals("page"))){
+                    gowrite = true;
+                }
+                else if (gowrite && reader.hasText()) {
                     text = reader.getText();
                     out.write(text.getBytes());
                     description.sizeSymbol += text.length();

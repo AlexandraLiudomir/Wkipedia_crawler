@@ -14,10 +14,10 @@ import java.util.TreeMap;
 public class SubCatCrawler {
     private SubCatDescription description;
     private TreeMap<String,String> pages; // key is pagename, value is pageID (because it is sorted by key)
-    private ArrayList<String> subCats;// список адресов подкатегорий
-    private  ArrayList<SubCatCrawler> subCatCrawlers;//краулеры подкатегорий
+    private ArrayList<String> subCats;//child subcats name list
+    private  ArrayList<SubCatCrawler> subCatCrawlers;
     private SubCatCrawler parent;
-    private int pagesCount;//актуально только у самого первого предка (категории), см getPagesCount, incPagesCount
+    private int pagesCount;//contains the number only for highest parent (category). subcats have zero here and if asked, they go upwards to that parent (look: getPagesCount, incPagesCount)
     private static final String pageQuery = "https://ru.wikipedia.org/w/api.php?format=xml&action=query&prop=extracts&explaintext&exsectionformat=plain&pageids=";
     private static final String subcatQuery = "https://ru.wikipedia.org/w/api.php?action=query&format=xml&list=categorymembers&cmprop=title|type|ids&cmlimit=50&cmtitle=Category:";
 
@@ -61,7 +61,7 @@ public class SubCatCrawler {
         XMLInputFactory FACTORY = XMLInputFactory.newInstance();
         try {
             XMLStreamReader reader = FACTORY.createXMLStreamReader(pageStream);
-            while (reader.hasNext()) {       // while not end of XML
+            while (reader.hasNext()) {
                 int event = reader.next();
                 if (event == XMLEvent.START_ELEMENT) {
                     if (reader.getName().toString().equals("cm")) {
@@ -74,7 +74,6 @@ public class SubCatCrawler {
                     }
                 }
             }
-            //Collections.sort(pages);
             Collections.sort(subCats);
         }
             catch (XMLStreamException e) {
@@ -129,7 +128,7 @@ public class SubCatCrawler {
             return parent.getID() + "_" + String.format("%03d",id);
         }
         else{
-            return String.format("%02d", id);//( "%02d", id.toString());
+            return String.format("%02d", id);
         }
     }
 
