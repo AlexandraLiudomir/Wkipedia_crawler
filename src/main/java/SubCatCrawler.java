@@ -29,7 +29,6 @@ public class SubCatCrawler {
         description.addrURL = subcatQuery+description.name.replace(" ","_");
         pages = new TreeMap<>();
         subCats = new ArrayList<>();
-        subCatCrawlers = new ArrayList<>(1);
         pagesCount = 0;
     }
 
@@ -37,7 +36,6 @@ public class SubCatCrawler {
         this.parent = parent;
         pages = new TreeMap<>();
         subCats = new ArrayList<>();
-        subCatCrawlers = new ArrayList<>(1);
         description = new SubCatDescription(parent.description);
         description.name = name;
         description.localNumber = num;
@@ -51,11 +49,11 @@ public class SubCatCrawler {
         File directory = new File(description.filePath);
         if(!directory.exists())
             directory.mkdirs();
-        getChildren();
+        loadPagesAndSubCats();
         crawlPages(launcher);
         }
 
-    private void getChildren() throws IOException
+    private void loadPagesAndSubCats() throws IOException
     {
         InputStream pageStream = new URL(this.description.addrURL).openStream();
         XMLInputFactory FACTORY = XMLInputFactory.newInstance();
@@ -90,15 +88,20 @@ public class SubCatCrawler {
        }
     }
 
-    public SubCatCrawler createChild(int num){
-        SubCatCrawler crawler = new SubCatCrawler(this, subCats.get(num), num);
-        subCatCrawlers.add(crawler);
-        return crawler;
+
+    public ArrayList<SubCatCrawler> getChildren(){
+        if (subCatCrawlers == null) {
+            subCatCrawlers = new ArrayList<>(subCats.size());
+            int i = 0;
+            for (String subCat : subCats) {
+                SubCatCrawler crawler = new SubCatCrawler(this, subCat, i);
+                subCatCrawlers.add(crawler);
+                i++;
+            }
+        }
+        return subCatCrawlers;
     }
 
-    public int childrenCount(){
-        return subCats.size();
-    }
 
     public int getPagesCount(){
         if (parent==null){

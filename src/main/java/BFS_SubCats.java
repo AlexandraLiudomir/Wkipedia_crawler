@@ -8,13 +8,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class BFS_SubCats { // Breadth first search through subcategories tree - main class of the application
     private ArrayList<String> startingCats;
-    private ArrayList<SubCatCrawler> subCats;
     private int maxPages;
     private String path;
     private MultiThreadLauncher threadLauncher;
 
     public BFS_SubCats(int threadCount, int period, int maxPages, String path, ArrayList<String> categories) {
-        subCats = new ArrayList<>();
         startingCats = categories;
         this.maxPages = maxPages;
         this.path = path;
@@ -82,12 +80,11 @@ public class BFS_SubCats { // Breadth first search through subcategories tree - 
     //which is an adaptation of breadth first search (instead of searching target node we are trying to collect 400 pages)
     public void breadthFirstSearch(String startCat, int number) throws IOException {
         Integer stopLevel = null; // level on which we have collected pages count we wanted
-        boolean goFurther = true; // shoul we keep adding subcats to queue
+        boolean goFurther = true; // should we keep adding subcats to queue
         SubCatCrawler currentNode;
-        subCats.clear();
-        subCats.add(new SubCatCrawler(path, startCat, number));
+        SubCatCrawler initNode = new SubCatCrawler(path, startCat, number);
         ConcurrentLinkedQueue<SubCatCrawler> queue = new ConcurrentLinkedQueue<>();
-        queue.add(subCats.get(0));
+        queue.add(initNode);
         while (!queue.isEmpty()) {
             currentNode = queue.poll();
             if (!totalStop(stopLevel, currentNode.getLevel())) {
@@ -103,10 +100,7 @@ public class BFS_SubCats { // Breadth first search through subcategories tree - 
             }
 
             if (goFurther) {
-                for (int i = 0; i < currentNode.childrenCount(); i++) {
-                    subCats.add(currentNode.createChild(i));
-                    queue.add(currentNode.createChild(i));
-                }
+                queue.addAll(currentNode.getChildren());
             }
         }
     }
